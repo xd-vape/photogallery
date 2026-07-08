@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GalleryStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model user {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      session[]
+  accounts      account[]
+  galleries     Gallery[]
+}
+
+model session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@unique([providerId, accountId])
+}
+
+model verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model Gallery {
+  id              String               @id @default(cuid())
+  ownerId         String
+  owner           user                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title           String
+  slug            String
+  description     String?
+  status          GalleryStatus        @default(DRAFT)
+  passwordHash    String?
+  expiresAt       DateTime?
+  coverImageId    String?              @unique
+  coverImage      Image?               @relation("GalleryCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  downloadEnabled Boolean              @default(false)
+  images          Image[]              @relation("GalleryImages")
+  submissions     FavoriteSubmission[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@unique([ownerId, slug])
+  @@index([slug])
+  @@index([ownerId, status])
+}
+
+model Image {
+  id            String         @id @default(cuid())
+  galleryId     String
+  gallery       Gallery        @relation("GalleryImages", fields: [galleryId], references: [id], onDelete: Cascade)
+  coverFor      Gallery?       @relation("GalleryCover")
+  originalKey   String
+  displayKey    String
+  thumbnailKey  String
+  filename      String
+  mimeType      String
+  sizeBytes     Int
+  width         Int
+  height        Int
+  position      Int
+  favoriteItems FavoriteItem[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([galleryId, position])
+}
+
+model FavoriteSubmission {
+  id          String         @id @default(cuid())
+  galleryId   String
+  gallery     Gallery        @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  clientName  String
+  clientEmail String
+  items       FavoriteItem[]
+  createdAt   DateTime       @default(now())
+
+  @@index([galleryId, createdAt])
+}
+
+model FavoriteItem {
+  id           String             @id @default(cuid())
+  submissionId String
+  submission   FavoriteSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  imageId      String
+  image        Image              @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, imageId])
+  @@index([imageId])
+}
