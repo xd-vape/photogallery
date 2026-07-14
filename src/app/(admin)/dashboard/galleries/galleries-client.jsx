@@ -173,7 +173,9 @@ export default function GalleriesClient({ galleries }) {
                   <span className="text-sm text-foreground">
                     {gallery._count.images}
                   </span>
-                  <p className="text-[10px] text-muted-foreground">photos</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    photos / {gallery._count.sets} sets
+                  </p>
                 </div>
 
                 {/* Date */}

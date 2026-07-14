@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { Download, Heart, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   GALLERY_PALETTES,
   normalizeGalleryAppearance,
 } from "@/lib/galleries/appearance";
+import GalleryToolBar from "@/components/gallery/toolbar";
 
 const FONT_CLASSES = {
   SERIF: "font-serif",
@@ -117,7 +118,8 @@ function GalleryCover({ gallery }) {
         className={cn(
           "absolute inset-0 flex px-7 py-10 text-white sm:px-12 sm:py-14",
           isMinimal && "items-end justify-start",
-          gallery.coverStyle === "CLASSIC" && "items-end justify-center text-center",
+          gallery.coverStyle === "CLASSIC" &&
+            "items-end justify-center text-center",
           isBold && "items-center justify-center text-center",
           isDark && "items-center justify-center text-center",
         )}
@@ -140,11 +142,35 @@ export function PublicGallery({ gallery, preview = false }) {
   const appearance = normalizeGalleryAppearance(gallery);
   const palette = GALLERY_PALETTES[appearance.colorPalette];
   const [active, setActive] = useState(null);
+  const [activeSetId, setActiveSetId] = useState("ALL");
   const [favorites, setFavorites] = useState(() => new Set());
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
+  const imagesStartRef = useRef(null);
   const favoriteIds = useMemo(() => Array.from(favorites), [favorites]);
   const themedGallery = { ...gallery, ...appearance };
+  const sets = gallery.sets || [];
+  const effectiveSetId =
+    activeSetId === "ALL" || sets.some((item) => item.id === activeSetId)
+      ? activeSetId
+      : "ALL";
+  const visibleImages =
+    effectiveSetId === "ALL"
+      ? gallery.images
+      : gallery.images.filter((image) => image.setId === effectiveSetId);
+
+  function selectSet(setId) {
+    setActiveSetId(setId);
+
+    window.requestAnimationFrame(() => {
+      imagesStartRef.current?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+    });
+  }
 
   function toggleFavorite(imageId) {
     if (preview) return;
@@ -201,89 +227,122 @@ export function PublicGallery({ gallery, preview = false }) {
     >
       <GalleryCover gallery={themedGallery} />
 
-      <main className="mx-auto w-full max-w-[1600px] px-3 py-12 sm:px-6 sm:py-16">
-        {gallery.images.length ? (
-          <div
-            className={cn(
-              "grid",
-              GRID_CLASSES[appearance.gridColumns],
-              GAP_CLASSES[appearance.gridSpacing],
-            )}
-          >
-            {gallery.images.map((image, index) => {
-              const isFavorite = favorites.has(image.id);
+      <GalleryToolBar
+        title={gallery.title}
+        subtitle="FOTOGRAFENNAME"
+        sets={sets}
+        totalImages={gallery.images.length}
+        activeSetId={effectiveSetId}
+        onSelectSet={selectSet}
+      />
 
-              return (
-                <div
-                  key={image.id}
-                  className="group relative overflow-hidden bg-[var(--gallery-surface)]"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setActive(image)}
-                    className="block w-full"
-                    aria-label={`Open ${image.filename}`}
-                  >
-                    <Image
-                      src={`/api/images/${image.id}/asset?variant=display`}
-                      alt={image.filename}
-                      width={image.width || 1200}
-                      height={image.height || 900}
-                      sizes={
-                        appearance.gridColumns === 4
-                          ? "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                          : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      }
-                      unoptimized
-                      loading={index < appearance.gridColumns ? "eager" : "lazy"}
-                      className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
-                    />
-                  </button>
-                  {!preview ? (
-                    <button
-                      type="button"
-                      onClick={() => toggleFavorite(image.id)}
-                      title={isFavorite ? "Remove favorite" : "Add favorite"}
-                      aria-label={isFavorite ? "Remove favorite" : "Add favorite"}
-                      className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-105"
-                      style={{
-                        backgroundColor: isFavorite
-                          ? "var(--gallery-accent)"
-                          : "color-mix(in srgb, white 90%, transparent)",
-                        color: isFavorite
-                          ? "var(--gallery-accent-foreground)"
-                          : "#1a1714",
-                      }}
+      <main
+        ref={imagesStartRef}
+        className="mx-auto mb-3 w-full scroll-mt-[72px] px-2 sm:px-4"
+      >
+        <div className={cn("grid gap-8")}>
+          <div className="min-w-0">
+            {visibleImages.length ? (
+              <div
+                className={cn(
+                  "grid",
+                  GRID_CLASSES[appearance.gridColumns],
+                  GAP_CLASSES[appearance.gridSpacing],
+                )}
+              >
+                {visibleImages.map((image, index) => {
+                  const isFavorite = favorites.has(image.id);
+
+                  return (
+                    <div
+                      key={image.id}
+                      className="group relative overflow-hidden bg-[var(--gallery-surface)]"
                     >
-                      <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
-                    </button>
-                  ) : null}
-                </div>
-              );
-            })}
+                      <button
+                        type="button"
+                        onClick={() => setActive(image)}
+                        className="block w-full"
+                        aria-label={`Open ${image.filename}`}
+                      >
+                        <Image
+                          src={`/api/images/${image.id}/asset?variant=display`}
+                          alt={image.filename}
+                          width={image.width || 1200}
+                          height={image.height || 900}
+                          sizes={
+                            appearance.gridColumns === 4
+                              ? "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                              : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          }
+                          unoptimized
+                          loading={
+                            index < appearance.gridColumns ? "eager" : "lazy"
+                          }
+                          className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.015]"
+                        />
+                      </button>
+                      {!preview ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleFavorite(image.id)}
+                          title={
+                            isFavorite ? "Remove favorite" : "Add favorite"
+                          }
+                          aria-label={
+                            isFavorite ? "Remove favorite" : "Add favorite"
+                          }
+                          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-105"
+                          style={{
+                            backgroundColor: isFavorite
+                              ? "var(--gallery-accent)"
+                              : "color-mix(in srgb, white 90%, transparent)",
+                            color: isFavorite
+                              ? "var(--gallery-accent-foreground)"
+                              : "#1a1714",
+                          }}
+                        >
+                          <Heart
+                            className={cn(
+                              "h-4 w-4",
+                              isFavorite && "fill-current",
+                            )}
+                          />
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-lg px-6 py-16 text-center">
+                This set has no images yet.
+              </div>
+            )}
           </div>
-        ) : (
-          <div
-            className="rounded-lg px-6 py-16 text-center"
-            style={{ backgroundColor: "var(--gallery-surface)" }}
-          >
-            This gallery has no images yet.
-          </div>
-        )}
+        </div>
 
-        {!preview && gallery.images.length ? (
+        {/* {!preview && gallery.images.length ? (
           <section
             className="mx-auto mt-14 max-w-2xl rounded-lg p-6 sm:p-8"
             style={{ backgroundColor: "var(--gallery-surface)" }}
           >
             <h2 className="text-xl font-medium">Submit favorites</h2>
-            <p className="mt-1 text-sm" style={{ color: "var(--gallery-muted)" }}>
-              {favoriteIds.length} selected image{favoriteIds.length === 1 ? "" : "s"}
+            <p
+              className="mt-1 text-sm"
+              style={{ color: "var(--gallery-muted)" }}
+            >
+              {favoriteIds.length} selected image
+              {favoriteIds.length === 1 ? "" : "s"}
             </p>
             <form onSubmit={submitFavorites} className="mt-5">
               <div className="grid gap-3 sm:grid-cols-2">
                 <Input name="clientName" required placeholder="Name" />
-                <Input name="clientEmail" type="email" required placeholder="Email" />
+                <Input
+                  name="clientEmail"
+                  type="email"
+                  required
+                  placeholder="Email"
+                />
               </div>
               <Button
                 type="submit"
@@ -297,13 +356,16 @@ export function PublicGallery({ gallery, preview = false }) {
                 {isPending ? "Submitting..." : "Submit selection"}
               </Button>
               {message ? (
-                <p className="mt-3 text-sm" style={{ color: "var(--gallery-muted)" }}>
+                <p
+                  className="mt-3 text-sm"
+                  style={{ color: "var(--gallery-muted)" }}
+                >
                   {message}
                 </p>
               ) : null}
             </form>
           </section>
-        ) : null}
+        ) : null} */}
       </main>
 
       {active ? (

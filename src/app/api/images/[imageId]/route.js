@@ -46,7 +46,7 @@ export async function PATCH(request, { params }) {
 
   const body = await request.json().catch(() => ({}));
 
-  if (body.action !== "set-cover") {
+  if (body.action !== "set-cover" && body.action !== "move-to-set") {
     return NextResponse.json({ error: "Unsupported action." }, { status: 400 });
   }
 
@@ -59,14 +59,46 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: "Image not found." }, { status: 404 });
   }
 
-  await prisma.gallery.update({
-    where: { id: image.galleryId },
-    data: { coverImageId: image.id },
-  });
+  if (body.action === "set-cover") {
+    await prisma.gallery.update({
+      where: { id: image.galleryId },
+      data: { coverImageId: image.id },
+    });
+  } else {
+    const setId = typeof body.setId === "string" && body.setId
+      ? body.setId
+      : null;
+
+    if (setId) {
+      const gallerySet = await prisma.gallerySet.findFirst({
+        where: { id: setId, galleryId: image.galleryId },
+        select: { id: true },
+      });
+
+      if (!gallerySet) {
+        return NextResponse.json({ error: "Set not found." }, { status: 400 });
+      }
+    }
+
+    const lastImage = await prisma.image.findFirst({
+      where: { galleryId: image.galleryId },
+      orderBy: { position: "desc" },
+      select: { position: true },
+    });
+
+    await prisma.image.update({
+      where: { id: image.id },
+      data: {
+        setId,
+        position: (lastImage?.position ?? -1) + 1,
+      },
+    });
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/galleries");
   revalidatePath(`/dashboard/galleries/${image.galleryId}`);
+  revalidatePath(`/preview/galleries/${image.galleryId}`);
   revalidatePath(`/g/${image.gallery.slug}`);
 
   return NextResponse.json({ ok: true });

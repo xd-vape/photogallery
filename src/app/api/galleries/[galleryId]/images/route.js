@@ -10,12 +10,27 @@ export async function POST(request, { params }) {
     const { galleryId } = await params;
     const { gallery } = await requireOwnedGallery(galleryId);
     const formData = await request.formData();
+    const requestedSetId = formData.get("setId");
+    const setId = typeof requestedSetId === "string" && requestedSetId
+      ? requestedSetId
+      : null;
     const files = formData
       .getAll("files")
       .filter((file) => file && typeof file.arrayBuffer === "function" && file.size > 0);
 
     if (!files.length) {
       return NextResponse.json({ error: "Choose at least one image." }, { status: 400 });
+    }
+
+    if (setId) {
+      const gallerySet = await prisma.gallerySet.findFirst({
+        where: { id: setId, galleryId: gallery.id },
+        select: { id: true },
+      });
+
+      if (!gallerySet) {
+        return NextResponse.json({ error: "Set not found." }, { status: 400 });
+      }
     }
 
     const storage = getStorage();
@@ -36,6 +51,7 @@ export async function POST(request, { params }) {
       const image = await prisma.image.create({
         data: {
           galleryId: gallery.id,
+          setId,
           originalKey: processed.originalKey,
           displayKey: processed.displayKey,
           thumbnailKey: processed.thumbnailKey,
@@ -54,6 +70,7 @@ export async function POST(request, { params }) {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/galleries");
     revalidatePath(`/dashboard/galleries/${gallery.id}`);
+    revalidatePath(`/preview/galleries/${gallery.id}`);
     revalidatePath(`/g/${gallery.slug}`);
 
     return NextResponse.json({ count: created.length });

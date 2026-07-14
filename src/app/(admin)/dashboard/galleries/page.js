@@ -16,7 +16,7 @@ export default async function GalleriesPage() {
           displayKey: true,
         },
       },
-      _count: { select: { images: true, submissions: true } },
+      _count: { select: { images: true, sets: true, submissions: true } },
     },
   });
 

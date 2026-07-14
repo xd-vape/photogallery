@@ -151,6 +151,7 @@ model Gallery {
   colorPalette     GalleryColorPalette   @default(LIGHT)
   gridColumns      Int                   @default(3)
   gridSpacing      GalleryGridSpacing    @default(REGULAR)
+  sets             GallerySet[]
   images           Image[]               @relation("GalleryImages")
   submissions      FavoriteSubmission[]
   createdAt        DateTime              @default(now())
@@ -161,10 +162,26 @@ model Gallery {
   @@index([ownerId, status])
 }
 
+model GallerySet {
+  id        String   @id @default(cuid())
+  galleryId String
+  gallery   Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  name      String
+  position  Int      @default(0)
+  images    Image[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([galleryId, name])
+  @@index([galleryId, position])
+}
+
 model Image {
   id            String         @id @default(cuid())
   galleryId     String
   gallery       Gallery        @relation("GalleryImages", fields: [galleryId], references: [id], onDelete: Cascade)
+  setId         String?
+  set           GallerySet?    @relation(fields: [setId], references: [id], onDelete: SetNull)
   coverFor      Gallery?       @relation("GalleryCover")
   originalKey   String
   displayKey    String
@@ -180,6 +197,7 @@ model Image {
   updatedAt     DateTime       @updatedAt
 
   @@index([galleryId, position])
+  @@index([setId, position])
 }
 
 model FavoriteSubmission {

@@ -12,6 +12,7 @@ export default async function GalleryPreviewPage({ params, searchParams }) {
   const query = await searchParams;
   const { gallery } = await requireOwnedGallery(galleryId, {
     images: { orderBy: { position: "asc" } },
+    sets: { orderBy: [{ position: "asc" }, { createdAt: "asc" }] },
   });
   const appearance = normalizeGalleryAppearance({
     coverStyle: query.coverStyle || gallery.coverStyle,

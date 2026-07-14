@@ -7,6 +7,7 @@ export default async function PublicGalleryPage({ params }) {
   const { slug } = await params;
   const gallery = await getPublicGallery(slug, {
     images: { orderBy: { position: "asc" } },
+    sets: { orderBy: [{ position: "asc" }, { createdAt: "asc" }] },
   });
   const hasAccess = await hasGalleryPasswordAccess(gallery);
 

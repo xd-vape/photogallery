@@ -19,6 +19,10 @@ export const galleryAppearanceSchema = z.object({
   gridSpacing: z.enum(["TIGHT", "REGULAR", "LARGE"]),
 });
 
+export const gallerySetNameSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+});
+
 export const favoriteSubmissionSchema = z.object({
   clientName: z.string().trim().min(2).max(120),
   clientEmail: z.email().max(200),

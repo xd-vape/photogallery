@@ -28,6 +28,7 @@ import {
 import {
   AdminImageGrid,
   GalleryForm,
+  GallerySetManager,
   UploadPanel,
 } from "@/features/admin/components";
 import {
@@ -36,11 +37,13 @@ import {
   updateGalleryAction,
   updateGalleryAppearanceAction,
 } from "@/features/admin/server";
+import { Field } from "@/components/ui/field";
+import { ChevronDown } from "lucide-react";
 
 const TABS = [
+  { id: "photos", label: "Photos" },
   { id: "settings", label: "Settings" },
   { id: "appearance", label: "Appearance" },
-  { id: "photos", label: "Photos" },
   { id: "selections", label: "Client selections" },
 ];
 
@@ -84,7 +87,8 @@ function appearanceEquals(left, right) {
 
 export default function GalleryIdClient({ gallery }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("settings");
+  const [activeTab, setActiveTab] = useState("photos");
+  const [activeSetId, setActiveSetId] = useState("ALL");
   const [savedAppearance, setSavedAppearance] = useState(() =>
     normalizeGalleryAppearance(gallery),
   );
@@ -95,6 +99,16 @@ export default function GalleryIdClient({ gallery }) {
   const archiveAction = archiveGalleryAction.bind(null, gallery.id);
   const deleteAction = deleteGalleryAction.bind(null, gallery.id);
   const isAppearanceDirty = !appearanceEquals(appearance, savedAppearance);
+  const gallerySets = gallery.sets || [];
+  const effectiveSetId =
+    activeSetId === "ALL" || gallerySets.some((item) => item.id === activeSetId)
+      ? activeSetId
+      : "ALL";
+  const activeSet = gallerySets.find((item) => item.id === effectiveSetId);
+  const visibleImages =
+    effectiveSetId === "ALL"
+      ? gallery.images
+      : gallery.images.filter((image) => image.setId === effectiveSetId);
   const coverImageSrc = gallery.coverImageId
     ? `/api/images/${gallery.coverImageId}/asset?variant=thumbnail`
     : "/images/cover.jpg";
@@ -118,7 +132,10 @@ export default function GalleryIdClient({ gallery }) {
   function saveAppearance() {
     startSavingAppearance(async () => {
       try {
-        const saved = await updateGalleryAppearanceAction(gallery.id, appearance);
+        const saved = await updateGalleryAppearanceAction(
+          gallery.id,
+          appearance,
+        );
         setSavedAppearance(saved);
         router.refresh();
         toast.success("Gallery appearance saved.");
@@ -164,7 +181,7 @@ export default function GalleryIdClient({ gallery }) {
         }
       />
 
-      <div className="flex shrink-0 items-center border-b border-border px-6">
+      <div className="flex shrink-0 items-center border-b border-border">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -181,59 +198,6 @@ export default function GalleryIdClient({ gallery }) {
           </button>
         ))}
       </div>
-
-      {activeTab === "settings" ? (
-        <main className="flex-1 overflow-y-auto px-8 py-7">
-          <div className="mx-auto max-w-3xl space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gallery settings</CardTitle>
-                <CardDescription>
-                  Update publication, access and download settings.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <GalleryForm
-                  gallery={gallery}
-                  action={settingsAction}
-                  submitLabel="Save settings"
-                  formId="gallery-settings-form"
-                />
-              </CardContent>
-            </Card>
-
-            <Card className="ring-destructive/30">
-              <CardHeader>
-                <CardTitle>Danger zone</CardTitle>
-                <CardDescription>
-                  Archive the gallery or permanently remove it and its images.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-wrap gap-3">
-                <form action={archiveAction}>
-                  <Button type="submit" variant="outline">
-                    <Archive />
-                    Archive gallery
-                  </Button>
-                </form>
-                <form
-                  action={deleteAction}
-                  onSubmit={(event) => {
-                    if (!window.confirm("Delete this gallery permanently?")) {
-                      event.preventDefault();
-                    }
-                  }}
-                >
-                  <Button type="submit" variant="destructive">
-                    <Trash2 />
-                    Delete gallery
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      ) : null}
 
       {activeTab === "appearance" ? (
         <div className="flex min-h-0 flex-1">
@@ -260,7 +224,9 @@ export default function GalleryIdClient({ gallery }) {
                         {style.label.toUpperCase()}
                       </span>
                     </div>
-                    <span className="text-[11px] font-medium">{style.label}</span>
+                    <span className="text-[11px] font-medium">
+                      {style.label}
+                    </span>
                   </SelectorCard>
                 ))}
               </div>
@@ -275,10 +241,14 @@ export default function GalleryIdClient({ gallery }) {
                     active={appearance.fontStyle === font.id}
                     onClick={() => setAppearanceKey("fontStyle", font.id)}
                   >
-                    <span className={cn("text-2xl leading-none", font.className)}>
+                    <span
+                      className={cn("text-2xl leading-none", font.className)}
+                    >
                       {font.preview}
                     </span>
-                    <span className="text-[11px] font-medium">{font.label}</span>
+                    <span className="text-[11px] font-medium">
+                      {font.label}
+                    </span>
                   </SelectorCard>
                 ))}
               </div>
@@ -302,7 +272,9 @@ export default function GalleryIdClient({ gallery }) {
                         />
                       ))}
                     </div>
-                    <span className="text-[11px] font-medium">{palette.label}</span>
+                    <span className="text-[11px] font-medium">
+                      {palette.label}
+                    </span>
                   </SelectorCard>
                 ))}
               </div>
@@ -312,27 +284,37 @@ export default function GalleryIdClient({ gallery }) {
               <SectionHeading>Grid</SectionHeading>
               <div className="space-y-4">
                 <div>
-                  <p className="mb-2 text-[11px] text-muted-foreground">Columns</p>
+                  <p className="mb-2 text-[11px] text-muted-foreground">
+                    Columns
+                  </p>
                   <div className="grid grid-cols-3 gap-2">
                     {GRID_COLUMN_OPTIONS.map((option) => (
                       <SelectorCard
                         key={option.id}
                         active={appearance.gridColumns === option.id}
-                        onClick={() => setAppearanceKey("gridColumns", option.id)}
+                        onClick={() =>
+                          setAppearanceKey("gridColumns", option.id)
+                        }
                       >
-                        <span className="text-sm font-semibold">{option.id}</span>
+                        <span className="text-sm font-semibold">
+                          {option.id}
+                        </span>
                       </SelectorCard>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 text-[11px] text-muted-foreground">Spacing</p>
+                  <p className="mb-2 text-[11px] text-muted-foreground">
+                    Spacing
+                  </p>
                   <div className="grid grid-cols-3 gap-2">
                     {GRID_SPACING_OPTIONS.map((option) => (
                       <SelectorCard
                         key={option.id}
                         active={appearance.gridSpacing === option.id}
-                        onClick={() => setAppearanceKey("gridSpacing", option.id)}
+                        onClick={() =>
+                          setAppearanceKey("gridSpacing", option.id)
+                        }
                       >
                         <span className="text-[10px]">{option.label}</span>
                       </SelectorCard>
@@ -346,7 +328,9 @@ export default function GalleryIdClient({ gallery }) {
           <div className="flex min-w-0 flex-1 flex-col bg-muted/30">
             <div className="flex items-center justify-between border-b border-border bg-background px-5 py-2.5">
               <p className="text-xs text-muted-foreground">Live preview</p>
-              {isAppearanceDirty ? <Badge variant="secondary">Unsaved</Badge> : null}
+              {isAppearanceDirty ? (
+                <Badge variant="secondary">Unsaved</Badge>
+              ) : null}
             </div>
             <div className="relative min-h-0 flex-1 overflow-hidden">
               <iframe
@@ -360,66 +344,106 @@ export default function GalleryIdClient({ gallery }) {
         </div>
       ) : null}
 
-      {activeTab === "photos" ? (
+      {activeTab !== "appearance" && (
         <main className="flex-1 overflow-y-auto px-8 py-7">
-          <div className="mx-auto max-w-6xl space-y-6">
-            <UploadPanel galleryId={gallery.id} />
-            <AdminImageGrid
-              images={gallery.images}
-              coverImageId={gallery.coverImageId}
+          {activeTab === "settings" ? (
+            <GalleryForm
+              gallery={gallery}
+              action={settingsAction}
+              submitLabel="Save settings"
+              formId="gallery-settings-form"
             />
-          </div>
-        </main>
-      ) : null}
+          ) : null}
 
-      {activeTab === "selections" ? (
-        <main className="flex-1 overflow-y-auto px-8 py-7">
-          <div className="mx-auto max-w-4xl space-y-4">
-            {gallery.submissions.length ? (
-              gallery.submissions.map((submission) => (
-                <Card key={submission.id}>
-                  <CardHeader>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <CardTitle>{submission.clientName}</CardTitle>
-                        <CardDescription>{submission.clientEmail}</CardDescription>
-                      </div>
-                      <Badge variant="secondary">
-                        {submission.items.length} selected
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-7">
-                      {submission.items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="relative aspect-square overflow-hidden rounded-md bg-muted"
-                        >
-                          <Image
-                            src={`/api/images/${item.image.id}/asset?variant=thumbnail`}
-                            alt={item.image.filename}
-                            fill
-                            sizes="120px"
-                            unoptimized
-                            className="object-cover"
-                          />
+          {activeTab === "photos" ? (
+            <div className="flex min-h-0 flex-1">
+              <GallerySetManager
+                galleryId={gallery.id}
+                sets={gallerySets}
+                totalImages={gallery.images.length}
+                activeSetId={effectiveSetId}
+                onSelect={setActiveSetId}
+              />
+              <main className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
+                <div className="mx-auto max-w-6xl space-y-6">
+                  <div>
+                    <h2 className="text-lg font-medium">
+                      {activeSet?.name || "All photos"}
+                    </h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {visibleImages.length} photo
+                      {visibleImages.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <UploadPanel
+                    galleryId={gallery.id}
+                    setId={activeSet?.id || null}
+                    setName={activeSet?.name}
+                  />
+                  <AdminImageGrid
+                    galleryId={gallery.id}
+                    images={visibleImages}
+                    sets={gallerySets}
+                    activeSetId={effectiveSetId}
+                    coverImageId={gallery.coverImageId}
+                  />
+                </div>
+              </main>
+            </div>
+          ) : null}
+
+          {activeTab === "selections" ? (
+            <main className="flex-1 overflow-y-auto px-8 py-7">
+              <div className="mx-auto max-w-4xl space-y-4">
+                {gallery.submissions.length ? (
+                  gallery.submissions.map((submission) => (
+                    <Card key={submission.id}>
+                      <CardHeader>
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <CardTitle>{submission.clientName}</CardTitle>
+                            <CardDescription>
+                              {submission.clientEmail}
+                            </CardDescription>
+                          </div>
+                          <Badge variant="secondary">
+                            {submission.items.length} selected
+                          </Badge>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <Card>
-                <CardContent className="p-10 text-center text-muted-foreground">
-                  No client selections have been submitted yet.
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-7">
+                          {submission.items.map((item) => (
+                            <div
+                              key={item.id}
+                              className="relative aspect-square overflow-hidden rounded-md bg-muted"
+                            >
+                              <Image
+                                src={`/api/images/${item.image.id}/asset?variant=thumbnail`}
+                                alt={item.image.filename}
+                                fill
+                                sizes="120px"
+                                unoptimized
+                                className="object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card>
+                    <CardContent className="p-10 text-center text-muted-foreground">
+                      No client selections have been submitted yet.
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </main>
+          ) : null}
         </main>
-      ) : null}
+      )}
     </div>
   );
 }

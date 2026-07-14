@@ -13,8 +13,29 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: "Invalid reorder request." }, { status: 400 });
   }
 
+  const image = await prisma.image.findFirst({
+    where: { id: body.imageId, galleryId: gallery.id },
+    select: { id: true, setId: true },
+  });
+
+  if (!image) {
+    return NextResponse.json({ error: "Image not found." }, { status: 404 });
+  }
+
+  const scopeSetId = typeof body.scopeSetId === "string"
+    ? body.scopeSetId
+    : "ALL";
+  const where = { galleryId: gallery.id };
+
+  if (scopeSetId !== "ALL") {
+    if (image.setId !== scopeSetId) {
+      return NextResponse.json({ error: "Image is not in this set." }, { status: 400 });
+    }
+    where.setId = scopeSetId;
+  }
+
   const images = await prisma.image.findMany({
-    where: { galleryId: gallery.id },
+    where,
     orderBy: { position: "asc" },
     select: { id: true, position: true },
   });
@@ -40,6 +61,7 @@ export async function POST(request, { params }) {
   ]);
 
   revalidatePath(`/dashboard/galleries/${gallery.id}`);
+  revalidatePath(`/preview/galleries/${gallery.id}`);
   revalidatePath(`/g/${gallery.slug}`);
 
   return NextResponse.json({ ok: true });

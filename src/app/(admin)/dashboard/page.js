@@ -58,6 +58,7 @@ export default async function DashboardPage() {
       _count: {
         select: {
           images: true,
+          sets: true,
           submissions: true,
         },
       },
@@ -120,7 +121,8 @@ export default async function DashboardPage() {
                       {gallery.title}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {gallery._count.images} photos &middot;{" "}
+                      {gallery._count.images} photos &middot; {gallery._count.sets} sets
+                      {" "}&middot;{" "}
                       {gallery.createdAt.toLocaleDateString("de-DE")}
                     </p>
                   </div>

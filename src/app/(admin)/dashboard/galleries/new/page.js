@@ -20,14 +20,7 @@ export default function NewGalleryPage() {
         subtitle={"Erstelle eine neue Galerie"}
       />
       <main className="flex flex-1 items-start justify-center px-6 py-16">
-        <div className="w-full max-w-md">
-          <Link href="/dashboard/galleries">
-            <Button variant="link" className="px-0">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to galleries
-            </Button>
-          </Link>
-
+        <div className="w-full max-w-lg">
           <Card className="px-8 py-8">
             <CardHeader>
               <CardTitle>Login to your account</CardTitle>

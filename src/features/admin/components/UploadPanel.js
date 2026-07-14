@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
-export function UploadPanel({ galleryId }) {
+export function UploadPanel({ galleryId, setId, setName }) {
   const router = useRouter();
   const inputRef = useRef(null);
   const [message, setMessage] = useState("");
@@ -18,6 +18,7 @@ export function UploadPanel({ galleryId }) {
     setMessage("");
 
     const formData = new FormData(event.currentTarget);
+    if (setId) formData.set("setId", setId);
     startTransition(async () => {
       const response = await fetch(`/api/galleries/${galleryId}/images`, {
         method: "POST",
@@ -41,7 +42,9 @@ export function UploadPanel({ galleryId }) {
       <CardContent className="pt-6">
         <form onSubmit={upload}>
           <div className="space-y-2">
-            <Label htmlFor="files">Upload images</Label>
+            <Label htmlFor="files">
+              Upload images{setName ? ` to ${setName}` : ""}
+            </Label>
             <Input
               ref={inputRef}
               id="files"
