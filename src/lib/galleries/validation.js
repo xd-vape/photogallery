@@ -6,8 +6,17 @@ export const gallerySchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
   password: z.string().max(120).optional().or(z.literal("")),
   clearPassword: z.boolean().default(false),
+  eventDate: z.string().optional().or(z.literal("")),
   expiresAt: z.string().optional().or(z.literal("")),
   downloadEnabled: z.boolean().default(false),
+});
+
+export const galleryAppearanceSchema = z.object({
+  coverStyle: z.enum(["CLASSIC", "MINIMAL", "BOLD", "SPLIT", "DARK"]),
+  fontStyle: z.enum(["SERIF", "SANS", "MODERN", "TIMELESS"]),
+  colorPalette: z.enum(["LIGHT", "GOLD", "ROSE", "SAND", "OLIVE", "DARK"]),
+  gridColumns: z.number().int().min(2).max(4),
+  gridSpacing: z.enum(["TIGHT", "REGULAR", "LARGE"]),
 });
 
 export const favoriteSubmissionSchema = z.object({
@@ -24,7 +33,18 @@ export function parseGalleryForm(formData) {
     password: formData.get("password") || "",
     clearPassword: formData.get("clearPassword") === "on",
     expiresAt: formData.get("expiresAt") || "",
+    eventDate: formData.get("eventDate") || "",
     downloadEnabled: formData.get("downloadEnabled") === "on",
+  });
+}
+
+export function parseGalleryAppearance(value) {
+  return galleryAppearanceSchema.parse({
+    coverStyle: value?.coverStyle,
+    fontStyle: value?.fontStyle,
+    colorPalette: value?.colorPalette,
+    gridColumns: Number(value?.gridColumns),
+    gridSpacing: value?.gridSpacing,
   });
 }
 
@@ -33,6 +53,11 @@ export function parseOptionalDate(value) {
     return null;
   }
 
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+  const date = new Date(`${value}T12:00:00.000Z`);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date;
 }

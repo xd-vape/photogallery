@@ -13,17 +13,78 @@ enum GalleryStatus {
   ARCHIVED
 }
 
+enum GalleryCoverStyle {
+  CLASSIC
+  MINIMAL
+  BOLD
+  SPLIT
+  DARK
+}
+
+enum GalleryFontStyle {
+  SERIF
+  SANS
+  MODERN
+  TIMELESS
+}
+
+enum GalleryColorPalette {
+  LIGHT
+  GOLD
+  ROSE
+  SAND
+  OLIVE
+  DARK
+}
+
+enum GalleryGridSpacing {
+  TIGHT
+  REGULAR
+  LARGE
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  PHOTOGRAPHER
+  VIEWER
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  STUDIO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  NONE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
 model user {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      session[]
-  accounts      account[]
-  galleries     Gallery[]
+  id                               String             @id @default(cuid())
+  name                             String
+  email                            String             @unique
+  emailVerified                    Boolean            @default(false)
+  image                            String?
+  role                             UserRole           @default(OWNER)
+  subscriptionPlan                 SubscriptionPlan   @default(FREE)
+  subscriptionStatus               SubscriptionStatus @default(NONE)
+  subscriptionCurrentPeriodEnd     DateTime?
+  subscriptionProviderCustomerId   String?
+  subscriptionProviderSubscriptionId String?
+  createdAt                        DateTime           @default(now())
+  updatedAt                        DateTime           @updatedAt
+  sessions                         session[]
+  accounts                         account[]
+  galleries                        Gallery[]
+
+  @@index([role])
+  @@index([subscriptionPlan, subscriptionStatus])
 }
 
 model session {
@@ -72,22 +133,28 @@ model verification {
 }
 
 model Gallery {
-  id              String               @id @default(cuid())
-  ownerId         String
-  owner           user                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  title           String
-  slug            String
-  description     String?
-  status          GalleryStatus        @default(DRAFT)
-  passwordHash    String?
-  expiresAt       DateTime?
-  coverImageId    String?              @unique
-  coverImage      Image?               @relation("GalleryCover", fields: [coverImageId], references: [id], onDelete: SetNull)
-  downloadEnabled Boolean              @default(false)
-  images          Image[]              @relation("GalleryImages")
-  submissions     FavoriteSubmission[]
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  id               String                @id @default(cuid())
+  ownerId          String
+  owner            user                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title            String
+  slug             String
+  description      String?
+  status           GalleryStatus         @default(DRAFT)
+  eventDate        DateTime?
+  passwordHash     String?
+  expiresAt        DateTime?
+  coverImageId     String?               @unique
+  coverImage       Image?                @relation("GalleryCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  downloadEnabled  Boolean               @default(false)
+  coverStyle       GalleryCoverStyle     @default(CLASSIC)
+  fontStyle        GalleryFontStyle      @default(SERIF)
+  colorPalette     GalleryColorPalette   @default(LIGHT)
+  gridColumns      Int                   @default(3)
+  gridSpacing      GalleryGridSpacing    @default(REGULAR)
+  images           Image[]               @relation("GalleryImages")
+  submissions      FavoriteSubmission[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
   @@unique([ownerId, slug])
   @@index([slug])

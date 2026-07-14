@@ -4,8 +4,8 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 export function UploadPanel({ galleryId }) {
   const router = useRouter();
@@ -55,7 +55,9 @@ export function UploadPanel({ galleryId }) {
             <Button type="submit" disabled={isPending}>
               {isPending ? "Uploading..." : "Upload"}
             </Button>
-            {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+            {message ? (
+              <p className="text-sm text-muted-foreground">{message}</p>
+            ) : null}
           </div>
         </form>
       </CardContent>

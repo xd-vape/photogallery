@@ -10,6 +10,14 @@ const nextConfig = {
         pathname: "/api/images/**/asset",
         search: "?variant=display",
       },
+      {
+        pathname: "/uploads/**",
+        search: "",
+      },
+      {
+        pathname: "/images/**",
+        search: "",
+      },
     ],
   },
 };

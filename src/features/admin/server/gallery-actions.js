@@ -7,7 +7,11 @@ import { requirePhotographer } from "@/lib/auth/session";
 import { requireOwnedGallery } from "@/lib/galleries/access";
 import { hashGalleryPassword } from "@/lib/galleries/passwords";
 import { uniqueGallerySlug } from "@/lib/galleries/slug";
-import { parseGalleryForm, parseOptionalDate } from "@/lib/galleries/validation";
+import {
+  parseGalleryAppearance,
+  parseGalleryForm,
+  parseOptionalDate,
+} from "@/lib/galleries/validation";
 import { getStorage } from "@/lib/storage";
 
 function galleryDataFromParsed(parsed, slug, passwordHash) {
@@ -18,6 +22,7 @@ function galleryDataFromParsed(parsed, slug, passwordHash) {
     status: parsed.status,
     passwordHash,
     expiresAt: parseOptionalDate(parsed.expiresAt),
+    eventDate: parseOptionalDate(parsed.eventDate),
     downloadEnabled: parsed.downloadEnabled,
   };
 }
@@ -43,7 +48,11 @@ export async function createGalleryAction(formData) {
 export async function updateGalleryAction(galleryId, formData) {
   const { gallery } = await requireOwnedGallery(galleryId);
   const parsed = parseGalleryForm(formData);
-  const slug = await uniqueGallerySlug(gallery.ownerId, parsed.title, gallery.id);
+  const slug = await uniqueGallerySlug(
+    gallery.ownerId,
+    parsed.title,
+    gallery.id,
+  );
   let passwordHash = gallery.passwordHash;
 
   if (parsed.clearPassword) {
@@ -60,6 +69,22 @@ export async function updateGalleryAction(galleryId, formData) {
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/galleries/${gallery.id}`);
   revalidatePath(`/g/${slug}`);
+}
+
+export async function updateGalleryAppearanceAction(galleryId, values) {
+  const { gallery } = await requireOwnedGallery(galleryId);
+  const appearance = parseGalleryAppearance(values);
+
+  await prisma.gallery.update({
+    where: { id: gallery.id },
+    data: appearance,
+  });
+
+  revalidatePath(`/dashboard/galleries/${gallery.id}`);
+  revalidatePath(`/preview/galleries/${gallery.id}`);
+  revalidatePath(`/g/${gallery.slug}`);
+
+  return appearance;
 }
 
 export async function archiveGalleryAction(galleryId) {
@@ -91,7 +116,7 @@ export async function deleteGalleryAction(galleryId) {
       storage.remove(image.originalKey),
       storage.remove(image.displayKey),
       storage.remove(image.thumbnailKey),
-    ])
+    ]),
   );
 
   await prisma.gallery.delete({ where: { id: gallery.id } });

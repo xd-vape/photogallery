@@ -35,3 +35,39 @@ export async function DELETE(_request, { params }) {
 
   return NextResponse.json({ ok: true });
 }
+
+export async function PATCH(request, { params }) {
+  const { imageId } = await params;
+  const session = await getSession();
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+
+  if (body.action !== "set-cover") {
+    return NextResponse.json({ error: "Unsupported action." }, { status: 400 });
+  }
+
+  const image = await prisma.image.findFirst({
+    where: { id: imageId, gallery: { ownerId: session.user.id } },
+    include: { gallery: true },
+  });
+
+  if (!image) {
+    return NextResponse.json({ error: "Image not found." }, { status: 404 });
+  }
+
+  await prisma.gallery.update({
+    where: { id: image.galleryId },
+    data: { coverImageId: image.id },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/galleries");
+  revalidatePath(`/dashboard/galleries/${image.galleryId}`);
+  revalidatePath(`/g/${image.gallery.slug}`);
+
+  return NextResponse.json({ ok: true });
+}

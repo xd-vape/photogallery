@@ -4,15 +4,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth/client";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+
 import { EyeOff } from "lucide-react";
 import { Eye } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SignInSchema, SignUpSchema } from "@/lib/zod/schema";
+import { toast } from "sonner";
 
 export function AuthForm({ mode }) {
   const router = useRouter();
@@ -63,13 +65,17 @@ export function AuthForm({ mode }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form
+      id="form-auth"
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col gap-4"
+    >
       {isSignup ? (
         <div className="space-y-2">
           <Label htmlFor="name" className="text-xs font-medium text-foreground">
             Username
           </Label>
-          <input
+          <Input
             id="name"
             name="name"
             type="text"
@@ -84,7 +90,7 @@ export function AuthForm({ mode }) {
         <Label htmlFor="email" className="text-xs font-medium text-foreground">
           Email
         </Label>
-        <input
+        <Input
           id="email"
           name="email"
           type="email"
@@ -114,7 +120,7 @@ export function AuthForm({ mode }) {
           )}
         </div>
         <div className="relative">
-          <input
+          <Input
             name="password"
             id="password"
             type={showPassword ? "text" : "password"}
@@ -139,8 +145,9 @@ export function AuthForm({ mode }) {
 
       <Button
         type="submit"
-        disabled={isPending}
+        form="form-auth"
         className="mt-1 w-full rounded-md bg-foreground py-2.5 text-sm font-medium text-background hover:bg-foreground/90 transition-colors disabled:opacity-60"
+        disabled={isPending}
       >
         {isPending ? "Please wait..." : isSignup ? "Create account" : "Log in"}
       </Button>

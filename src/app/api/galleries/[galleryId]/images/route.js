@@ -51,13 +51,8 @@ export async function POST(request, { params }) {
       created.push(image);
     }
 
-    if (!gallery.coverImageId && created[0]) {
-      await prisma.gallery.update({
-        where: { id: gallery.id },
-        data: { coverImageId: created[0].id },
-      });
-    }
-
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/galleries");
     revalidatePath(`/dashboard/galleries/${gallery.id}`);
     revalidatePath(`/g/${gallery.slug}`);
 

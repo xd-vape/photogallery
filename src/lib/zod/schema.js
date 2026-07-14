@@ -1,23 +1,27 @@
 import { z } from "zod";
 
-const AuthBaseSchema = z.object({
+export const SignInSchema = z.object({
   email: z.email("Ungültige E-Mail-Adresse"),
-  password: z.string().min(8, "Passwort muss mindestens 8 Zeichen lang sein"),
+  password: z.string().min(1, "Passwort ist erforderlich"),
 });
 
-export const SignInSchema = AuthBaseSchema;
+export const SignUpSchema = z
+  .object({
+    name: z
+      .string()
+      .min(3, "Username muss mindestens 3 Zeichen haben")
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "Username darf nur Buchstaben, Zahlen und Unterstriche enthalten.",
+      ),
 
-export const SignUpSchema = AuthBaseSchema.extend({
-  name: z
-    .string()
-    .min(3, "Username muss mindestens 3 Zeichen haben")
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores.",
-    ),
+    email: z.email("Ungültige E-Mail-Adresse"),
 
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwörter stimmen nicht überein!",
-  path: ["confirmPassword"],
-});
+    password: z.string().min(8, "Passwort muss mindestens 8 Zeichen lang sein"),
+
+    confirmPassword: z.string().min(1, "Bitte Passwort bestätigen"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwörter stimmen nicht überein!",
+    path: ["confirmPassword"],
+  });

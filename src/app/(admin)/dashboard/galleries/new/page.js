@@ -1,26 +1,49 @@
 import Link from "next/link";
 import { GalleryForm } from "@/features/admin/components";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createGalleryAction } from "@/features/admin/server";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import DashboardTopBar from "@/components/dashboard/topbar";
+import { ArrowLeft } from "lucide-react";
 
 export default function NewGalleryPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-6 py-8">
-      <Button variant="link" className="px-0">
-        <Link href="/dashboard">Back to dashboard</Link>
-      </Button>
-      <h1 className="mt-6 text-3xl font-semibold tracking-tight">
-        New gallery
-      </h1>
-      <Card className="mt-8">
-        <CardContent className="pt-6">
-          <GalleryForm
-            action={createGalleryAction}
-            submitLabel="Create gallery"
-          />
-        </CardContent>
-      </Card>
-    </main>
+    <div className="felex flex-col">
+      <DashboardTopBar
+        title={"Neue Galerie"}
+        subtitle={"Erstelle eine neue Galerie"}
+      />
+      <main className="flex flex-1 items-start justify-center px-6 py-16">
+        <div className="w-full max-w-md">
+          <Link href="/dashboard/galleries">
+            <Button variant="link" className="px-0">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to galleries
+            </Button>
+          </Link>
+
+          <Card className="px-8 py-8">
+            <CardHeader>
+              <CardTitle>Login to your account</CardTitle>
+              <CardDescription>
+                Enter your email below to login to your account
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="">
+              <GalleryForm
+                action={createGalleryAction}
+                submitLabel="Create gallery"
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
   );
 }

@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 
-export function AdminImageGrid({ images }) {
+export function AdminImageGrid({ images, coverImageId }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -50,6 +51,25 @@ export function AdminImageGrid({ images }) {
     });
   }
 
+  function setCover(imageId) {
+    startTransition(async () => {
+      setMessage("");
+      const response = await fetch(`/api/images/${imageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set-cover" }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setMessage(data.error || "Could not set cover image.");
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
   if (!images.length) {
     return (
       <Card>
@@ -66,21 +86,42 @@ export function AdminImageGrid({ images }) {
         <p className="mb-3 text-sm text-destructive">{message}</p>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {images.map((image, index) => (
+        {images.map((image, index) => {
+          const isCover = image.id === coverImageId;
+
+          return (
           <Card key={image.id} className="overflow-hidden">
-            <Image
-              src={`/api/images/${image.id}/asset?variant=thumbnail`}
-              alt={image.filename}
-              width={image.width || 600}
-              height={image.height || 600}
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              unoptimized
-              loading="eager"
-              className="aspect-square w-full object-cover"
-            />
+            <div className="relative">
+              <Image
+                src={`/api/images/${image.id}/asset?variant=thumbnail`}
+                alt={image.filename}
+                width={image.width || 600}
+                height={image.height || 600}
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                unoptimized
+                loading={index === 0 ? "eager" : "lazy"}
+                className="aspect-square w-full object-cover"
+              />
+              {isCover ? (
+                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-xs font-medium text-foreground shadow-sm">
+                  <Star className="h-3 w-3 fill-current" />
+                  Cover
+                </span>
+              ) : null}
+            </div>
             <CardContent className="space-y-3 p-3">
               <p className="truncate text-sm font-medium">{image.filename}</p>
               <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  disabled={isPending || isCover}
+                  onClick={() => setCover(image.id)}
+                  variant={isCover ? "secondary" : "outline"}
+                  size="sm"
+                >
+                  <Star className="h-4 w-4" />
+                  {isCover ? "Cover" : "Set cover"}
+                </Button>
                 <Button
                   type="button"
                   disabled={isPending || index === 0}
@@ -111,7 +152,8 @@ export function AdminImageGrid({ images }) {
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -2,6 +2,15 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"]
-    }
-  }
+    },
+    "checkJs": false,
+    "jsx": "preserve"
+  },
+  "include": [
+    "next-env.d.js",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    ".next/types/**/*.js"
+  ],
+  "exclude": ["node_modules"]
 }
