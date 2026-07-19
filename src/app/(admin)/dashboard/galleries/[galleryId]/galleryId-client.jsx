@@ -39,6 +39,8 @@ import {
 } from "@/features/admin/server";
 import { Field } from "@/components/ui/field";
 import { ChevronDown } from "lucide-react";
+import { Target } from "lucide-react";
+import { SquareArrowOutUpRight } from "lucide-react";
 
 const TABS = [
   { id: "photos", label: "Photos" },
@@ -149,9 +151,19 @@ export default function GalleryIdClient({ gallery }) {
     <div className="flex h-full flex-col overflow-hidden">
       <DashboardTopBar
         title={gallery.title}
-        subtitle={`/${gallery.slug}`}
+        subtitle={
+          <Link
+            href={`/g/${gallery.slug}`}
+            target="_blank"
+            className={cn(
+              "transition-colors text-muted-foreground hover:border-b hover:border-black hover:text-foreground",
+            )}
+          >
+            /{gallery.slug}
+          </Link>
+        }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 border-foreground text-foreground">
             <Link
               href={previewUrl}
               target="_blank"
@@ -345,51 +357,55 @@ export default function GalleryIdClient({ gallery }) {
       ) : null}
 
       {activeTab !== "appearance" && (
-        <main className="flex-1 overflow-y-auto px-8 py-7">
+        <>
           {activeTab === "settings" ? (
-            <GalleryForm
-              gallery={gallery}
-              action={settingsAction}
-              submitLabel="Save settings"
-              formId="gallery-settings-form"
-            />
+            <main className="flex-1 overflow-y-auto px-8 py-7">
+              <GalleryForm
+                gallery={gallery}
+                action={settingsAction}
+                submitLabel="Save settings"
+                formId="gallery-settings-form"
+              />
+            </main>
           ) : null}
 
           {activeTab === "photos" ? (
-            <div className="flex min-h-0 flex-1">
-              <GallerySetManager
-                galleryId={gallery.id}
-                sets={gallerySets}
-                totalImages={gallery.images.length}
-                activeSetId={effectiveSetId}
-                onSelect={setActiveSetId}
-              />
-              <main className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
-                <div className="mx-auto max-w-6xl space-y-6">
-                  <div>
-                    <h2 className="text-lg font-medium">
-                      {activeSet?.name || "All photos"}
-                    </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {visibleImages.length} photo
-                      {visibleImages.length === 1 ? "" : "s"}
-                    </p>
+            <main className="flex-1 overflow-y-auto">
+              <div className="flex min-h-0 flex-1">
+                <GallerySetManager
+                  galleryId={gallery.id}
+                  sets={gallerySets}
+                  totalImages={gallery.images.length}
+                  activeSetId={effectiveSetId}
+                  onSelect={setActiveSetId}
+                />
+                <main className="min-w-0 flex-1 overflow-y-auto px-3 py-2">
+                  <div className=" w-full space-y-6">
+                    <div>
+                      <h2 className="text-lg font-medium">
+                        {activeSet?.name || "All photos"}
+                      </h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {visibleImages.length} photo
+                        {visibleImages.length === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                    <UploadPanel
+                      galleryId={gallery.id}
+                      setId={activeSet?.id || null}
+                      setName={activeSet?.name}
+                    />
+                    <AdminImageGrid
+                      galleryId={gallery.id}
+                      images={visibleImages}
+                      sets={gallerySets}
+                      activeSetId={effectiveSetId}
+                      coverImageId={gallery.coverImageId}
+                    />
                   </div>
-                  <UploadPanel
-                    galleryId={gallery.id}
-                    setId={activeSet?.id || null}
-                    setName={activeSet?.name}
-                  />
-                  <AdminImageGrid
-                    galleryId={gallery.id}
-                    images={visibleImages}
-                    sets={gallerySets}
-                    activeSetId={effectiveSetId}
-                    coverImageId={gallery.coverImageId}
-                  />
-                </div>
-              </main>
-            </div>
+                </main>
+              </div>
+            </main>
           ) : null}
 
           {activeTab === "selections" ? (
@@ -442,7 +458,7 @@ export default function GalleryIdClient({ gallery }) {
               </div>
             </main>
           ) : null}
-        </main>
+        </>
       )}
     </div>
   );

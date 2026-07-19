@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 import { CalenderPicker } from "@/components/dashboard/gallerie/calenderpicker";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+
+function formatInputDate(value) {
+  if (!value) return "";
+
+  return new Date(value).toISOString().slice(0, 10);
+}
 
 function Toggle({ name, label, description, checked, onCheckedChange }) {
   return (
@@ -44,6 +49,13 @@ function Toggle({ name, label, description, checked, onCheckedChange }) {
 }
 
 export function GalleryForm({ gallery, action, submitLabel, formId }) {
+  const [title, setTitle] = useState(gallery?.title ?? "");
+  const [description, setDescription] = useState(gallery?.description ?? "");
+  const [status, setStatus] = useState(gallery?.status ?? "DRAFT");
+  const [expiresAt, setExpiresAt] = useState(
+    formatInputDate(gallery?.expiresAt),
+  );
+
   const [passwordProtected, setPasswordProtected] = useState(
     Boolean(gallery?.passwordHash),
   );
@@ -52,24 +64,35 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
     Boolean(gallery?.downloadEnabled),
   );
 
-  const expiresValue = gallery?.expiresAt
-    ? new Date(gallery.expiresAt).toISOString().slice(0, 10)
-    : "";
+  const eventDateValue = formatInputDate(gallery?.eventDate);
 
-  const eventDateValue = gallery?.eventDate
-    ? new Date(gallery.eventDate).toISOString().slice(0, 10)
-    : "";
+  // Falls gallery nach einer Server Action neu geladen wird,
+  // werden die kontrollierten Werte synchronisiert.
+  useEffect(() => {
+    setTitle(gallery?.title ?? "");
+    setDescription(gallery?.description ?? "");
+    setStatus(gallery?.status ?? "DRAFT");
+    setExpiresAt(formatInputDate(gallery?.expiresAt));
+    setPasswordProtected(Boolean(gallery?.passwordHash));
+    setDownloadEnabled(Boolean(gallery?.downloadEnabled));
+  }, [
+    gallery?.id,
+    gallery?.title,
+    gallery?.description,
+    gallery?.status,
+    gallery?.expiresAt,
+    gallery?.passwordHash,
+    gallery?.downloadEnabled,
+  ]);
 
   return (
     <form id={formId} action={action} className="max-w-2xl space-y-10">
-      {/* General */}
       <section>
         <h2 className="mb-5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           General
         </h2>
 
         <div className="space-y-4">
-          {/* Titel */}
           <div className="space-y-2">
             <Label htmlFor="title">
               Gallery Title <span className="text-red-500">*</span>
@@ -81,13 +104,13 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
               required
               minLength={2}
               maxLength={120}
-              defaultValue={gallery?.title ?? ""}
-              placeholder="z.B. Hochzeit Emma & James"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="z. B. Hochzeit Emma & James"
               className="input-field"
             />
           </div>
 
-          {/* Slug */}
           {gallery?.slug ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -113,7 +136,6 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
             </div>
           ) : null}
 
-          {/* Beschreibung */}
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
 
@@ -122,13 +144,13 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
               name="description"
               rows={3}
               maxLength={2000}
-              defaultValue={gallery?.description ?? ""}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
               placeholder="Optional note shown to the client..."
               className="input-field resize-none"
             />
           </div>
 
-          {/* Status und Eventdatum */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
@@ -137,7 +159,8 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
                 <select
                   id="status"
                   name="status"
-                  defaultValue={gallery?.status ?? "DRAFT"}
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
                   className="input-field w-full appearance-none pr-8"
                 >
                   <option value="DRAFT">Draft</option>
@@ -156,7 +179,6 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
             </div>
           </div>
 
-          {/* Ablaufdatum */}
           <div className="space-y-2">
             <Label htmlFor="expiresAt">Expiry date</Label>
 
@@ -164,7 +186,8 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
               id="expiresAt"
               name="expiresAt"
               type="date"
-              defaultValue={expiresValue}
+              value={expiresAt}
+              onChange={(event) => setExpiresAt(event.target.value)}
               className="input-field"
             />
 
@@ -175,7 +198,6 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
         </div>
       </section>
 
-      {/* Access & Download */}
       <section>
         <h2 className="mb-5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Access & Download
@@ -209,14 +231,12 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
 
               {gallery?.passwordHash ? (
                 <p className="text-xs text-muted-foreground">
-                  The existing password cannot be displayed. Leave this field
-                  empty to keep it.
+                  Leave this field empty to keep the existing password.
                 </p>
               ) : null}
             </div>
           ) : null}
 
-          {/* Wird nur gesendet, wenn ein bestehendes Passwort entfernt wird */}
           {!passwordProtected && gallery?.passwordHash ? (
             <input type="hidden" name="clearPassword" value="on" />
           ) : null}
@@ -230,6 +250,10 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
           />
         </div>
       </section>
+
+      <div className="flex justify-end border-t border-border pt-5">
+        <Button type="submit">{submitLabel}</Button>
+      </div>
     </form>
   );
 }

@@ -28,11 +28,11 @@ export default function GalleryToolBar({
         {/* Left */}
         <div className="flex justify-center items-center gap-4">
           <div>
-            <p className="text-sm font-sans font-semibold tracking-[0.12em] uppercase text-foreground leading-none">
+            <p className="text-[1.0125rem] font-sans font-semibold tracking-[0.12em] uppercase text-foreground leading-none">
               {title}
             </p>
             {subtitle && (
-              <p className="text-[9px] font-sans tracking-[0.1em] uppercase text-muted-foreground mt-0.5 leading-none">
+              <p className="text-[.5625rem] font-sans tracking-widest uppercase text-muted-foreground mt-2 leading-none">
                 {subtitle}
               </p>
             )}

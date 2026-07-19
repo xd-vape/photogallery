@@ -54,10 +54,10 @@ export default function GallerySetNavigation({
               type="button"
               onClick={() => onSelect(item.id)}
               className={cn(
-                "px-3.5 py-1 text-[10px] font-sans tracking-[0.12em] uppercase transition-colors whitespace-nowrap",
+                "px-3.5 py-1 text-xs font-sans tracking-[0.12em] uppercase transition-colors whitespace-nowrap",
                 isSidebar
                   ? "px-4 py-3 text-sm"
-                  : "px-3.5 py-4 text-[10px] font-medium uppercase tracking-[0.12em]",
+                  : "px-3.5 py-4 font-medium uppercase tracking-[0.12em]",
                 active
                   ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground/70",

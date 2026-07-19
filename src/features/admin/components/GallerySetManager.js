@@ -103,7 +103,11 @@ export function GallerySetManager({
   }
 
   function deleteSet(gallerySet) {
-    if (!window.confirm(`Delete the set "${gallerySet.name}"? The photos will remain.`)) {
+    if (
+      !window.confirm(
+        `Delete the set "${gallerySet.name}"? The photos will remain.`,
+      )
+    ) {
       return;
     }
 
@@ -127,7 +131,7 @@ export function GallerySetManager({
   return (
     <>
       <aside className="w-64 shrink-0 overflow-y-auto border-r border-border bg-background">
-        <div className="flex h-14 items-center justify-between px-5">
+        <div className="flex items-center justify-between px-2 py-4">
           <span className="text-xs font-semibold uppercase text-muted-foreground">
             Photos
           </span>
@@ -174,7 +178,9 @@ export function GallerySetManager({
                 className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-5 text-left text-sm"
               >
                 <GripVertical className="h-4 w-4 shrink-0" />
-                <span className="min-w-0 flex-1 truncate">{gallerySet.name}</span>
+                <span className="min-w-0 flex-1 truncate">
+                  {gallerySet.name}
+                </span>
                 <span className="text-xs tabular-nums">
                   {gallerySet._count.images}
                 </span>
@@ -194,7 +200,9 @@ export function GallerySetManager({
                   <span className="sr-only">Set actions</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => openEditor("rename", gallerySet)}>
+                  <DropdownMenuItem
+                    onClick={() => openEditor("rename", gallerySet)}
+                  >
                     <Pencil />
                     Rename
                   </DropdownMenuItem>
