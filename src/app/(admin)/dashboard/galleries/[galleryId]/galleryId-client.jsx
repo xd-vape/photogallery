@@ -361,6 +361,7 @@ export default function GalleryIdClient({ gallery }) {
           {activeTab === "settings" ? (
             <main className="flex-1 overflow-y-auto px-8 py-7">
               <GalleryForm
+                key={`${gallery.id}-${gallery.updatedAt}`}
                 gallery={gallery}
                 action={settingsAction}
                 submitLabel="Save settings"

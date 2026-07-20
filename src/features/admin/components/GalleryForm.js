@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { CalenderPicker } from "@/components/dashboard/gallerie/calenderpicker";
@@ -55,35 +55,14 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
   const [expiresAt, setExpiresAt] = useState(
     formatInputDate(gallery?.expiresAt),
   );
-
   const [passwordProtected, setPasswordProtected] = useState(
     Boolean(gallery?.passwordHash),
   );
-
   const [downloadEnabled, setDownloadEnabled] = useState(
     Boolean(gallery?.downloadEnabled),
   );
 
   const eventDateValue = formatInputDate(gallery?.eventDate);
-
-  // Falls gallery nach einer Server Action neu geladen wird,
-  // werden die kontrollierten Werte synchronisiert.
-  useEffect(() => {
-    setTitle(gallery?.title ?? "");
-    setDescription(gallery?.description ?? "");
-    setStatus(gallery?.status ?? "DRAFT");
-    setExpiresAt(formatInputDate(gallery?.expiresAt));
-    setPasswordProtected(Boolean(gallery?.passwordHash));
-    setDownloadEnabled(Boolean(gallery?.downloadEnabled));
-  }, [
-    gallery?.id,
-    gallery?.title,
-    gallery?.description,
-    gallery?.status,
-    gallery?.expiresAt,
-    gallery?.passwordHash,
-    gallery?.downloadEnabled,
-  ]);
 
   return (
     <form id={formId} action={action} className="max-w-2xl space-y-10">
