@@ -33,6 +33,9 @@ const AUTH_ERROR_MESSAGES = {
 
   SIGNUP_DISABLED: "Die Registrierung ist derzeit deaktiviert.",
 
+  BANNED_USER:
+    "Dein Benutzerkonto wurde gesperrt. Bitte wende dich an den Administrator.",
+
   FAILED_TO_CREATE_USER: "Das Benutzerkonto konnte nicht erstellt werden.",
 
   UNABLE_TO_CREATE_USER: "Das Benutzerkonto konnte nicht erstellt werden.",

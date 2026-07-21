@@ -64,19 +64,27 @@ model user {
   email                            String             @unique
   emailVerified                    Boolean            @default(false)
   image                            String?
+
   role                             String             @default("user")
+  banned                           Boolean?            @default(false)
+  banReason                        String?
+  banExpires                       DateTime?
+
   subscriptionPlan                 SubscriptionPlan   @default(FREE)
   subscriptionStatus               SubscriptionStatus @default(NONE)
   subscriptionCurrentPeriodEnd     DateTime?
   subscriptionProviderCustomerId   String?
   subscriptionProviderSubscriptionId String?
+
   createdAt                        DateTime           @default(now())
   updatedAt                        DateTime           @updatedAt
+  
   sessions                         session[]
   accounts                         account[]
   galleries                        Gallery[]
 
   @@index([role])
+  @@index([banned])
   @@index([subscriptionPlan, subscriptionStatus])
 }
 
@@ -88,10 +96,14 @@ model session {
   updatedAt DateTime @updatedAt
   ipAddress String?
   userAgent String?
+
+  impersonatedBy String?
+
   userId    String
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([impersonatedBy])
 }
 
 model account {

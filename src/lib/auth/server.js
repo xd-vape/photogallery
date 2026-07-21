@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "@/lib/db/prisma";
+import { admin } from "better-auth/plugins";
 
 export const auth = betterAuth({
   secret:
@@ -26,5 +27,13 @@ export const auth = betterAuth({
   verification: {
     modelName: "verification",
   },
-  plugins: [nextCookies()],
+  plugins: [
+    admin({
+      defaultRole: "user",
+      adminRoles: ["admin"],
+      bannedUserMessage:
+        "Dein Benutzerkonto wurde gesperrt. Bitt wende dich an den Administrator",
+    }),
+    nextCookies(),
+  ],
 });
