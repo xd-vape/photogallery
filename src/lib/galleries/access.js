@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
-import { requirePhotographer } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 
 function secret() {
   return process.env.BETTER_AUTH_SECRET || "development-gallery-access-secret";
@@ -46,7 +46,7 @@ export async function getOwnedGallery(galleryId, ownerId, include = {}) {
 }
 
 export async function requireOwnedGallery(galleryId, include = {}) {
-  const user = await requirePhotographer();
+  const user = await requireUser();
   const gallery = await getOwnedGallery(galleryId, user.id, include);
   return { user, gallery };
 }
@@ -83,5 +83,7 @@ export async function hasGalleryPasswordAccess(gallery) {
 }
 
 export async function canViewPublicGallery(gallery) {
-  return isPublishedGalleryAvailable(gallery) && hasGalleryPasswordAccess(gallery);
+  return (
+    isPublishedGalleryAvailable(gallery) && hasGalleryPasswordAccess(gallery)
+  );
 }

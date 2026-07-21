@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
-import { requirePhotographer } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { requireOwnedGallery } from "@/lib/galleries/access";
 import { hashGalleryPassword } from "@/lib/galleries/passwords";
 import { uniqueGallerySlug } from "@/lib/galleries/slug";
@@ -29,7 +29,7 @@ function galleryDataFromParsed(parsed, slug, passwordHash) {
 }
 
 export async function createGalleryAction(formData) {
-  const user = await requirePhotographer();
+  const user = await requireUser();
   const parsed = parseGalleryForm(formData);
   const slug = await uniqueGallerySlug(user.id, parsed.title);
   const passwordHash = await hashGalleryPassword(parsed.password);

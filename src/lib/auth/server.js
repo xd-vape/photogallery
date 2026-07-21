@@ -32,7 +32,7 @@ export const auth = betterAuth({
       defaultRole: "user",
       adminRoles: ["admin"],
       bannedUserMessage:
-        "Dein Benutzerkonto wurde gesperrt. Bitt wende dich an den Administrator",
+        "Dein Benutzerkonto wurde gesperrt. Bitt wende dich an den Administrator.",
     }),
     nextCookies(),
   ],

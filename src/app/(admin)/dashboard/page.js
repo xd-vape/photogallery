@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { prisma } from "@/lib/db/prisma";
-import { requirePhotographer } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { SignOutButton } from "@/features/auth/components";
 import DashboardTopBar from "@/components/dashboard/topbar";
 import {
@@ -30,7 +30,7 @@ function getGalleryCoverUrl(gallery) {
 }
 
 export default async function DashboardPage() {
-  const user = await requirePhotographer();
+  const user = await requireUser();
   const stats = await getDashboardStats(user.id);
 
   // Altes laden der ganzen Gallieren vom User
@@ -121,8 +121,8 @@ export default async function DashboardPage() {
                       {gallery.title}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {gallery._count.images} photos &middot; {gallery._count.sets} sets
-                      {" "}&middot;{" "}
+                      {gallery._count.images} photos &middot;{" "}
+                      {gallery._count.sets} sets &middot;{" "}
                       {gallery.createdAt.toLocaleDateString("de-DE")}
                     </p>
                   </div>
