@@ -43,13 +43,6 @@ enum GalleryGridSpacing {
   LARGE
 }
 
-enum UserRole {
-  OWNER
-  ADMIN
-  PHOTOGRAPHER
-  VIEWER
-}
-
 enum SubscriptionPlan {
   FREE
   PRO
@@ -71,7 +64,7 @@ model user {
   email                            String             @unique
   emailVerified                    Boolean            @default(false)
   image                            String?
-  role                             UserRole           @default(OWNER)
+  role                             String             @default("user")
   subscriptionPlan                 SubscriptionPlan   @default(FREE)
   subscriptionStatus               SubscriptionStatus @default(NONE)
   subscriptionCurrentPeriodEnd     DateTime?

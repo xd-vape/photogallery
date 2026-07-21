@@ -25,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { getPlanLabel, getRoleLabel } from "@/lib/auth/permissions";
+import { getPlanLabel, getRoleLabel, isAdmin } from "@/lib/auth/permissions";
 import { Users } from "lucide-react";
 import { BookUser } from "lucide-react";
 import { BarChart2 } from "lucide-react";
@@ -54,7 +54,7 @@ export default function DashboardSidebar({ user }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const accesAdmin = ["OWNER", "ADMIN"].includes(user.role);
+  const accessAdmin = isAdmin(user);
 
   const userInitials = user
     ? user.name
@@ -64,8 +64,6 @@ export default function DashboardSidebar({ user }) {
         .slice(0, 2)
         .toUpperCase()
     : "";
-
-  console.log(user.role);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-border bg-sidebar">
@@ -103,7 +101,7 @@ export default function DashboardSidebar({ user }) {
           })}
         </div>
 
-        {accesAdmin && (
+        {accessAdmin && (
           <div className="mt-4">
             <Separator className="mb-4" />
             <p className="mb-1.5 px-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">

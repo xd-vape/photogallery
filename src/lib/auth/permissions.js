@@ -1,8 +1,6 @@
 export const USER_ROLES = {
-  OWNER: "OWNER",
-  ADMIN: "ADMIN",
-  PHOTOGRAPHER: "PHOTOGRAPHER",
-  VIEWER: "VIEWER",
+  USER: "user",
+  ADMIN: "admin",
 };
 
 export const SUBSCRIPTION_PLANS = {
@@ -21,10 +19,8 @@ export const SUBSCRIPTION_STATUSES = {
 };
 
 export const ROLE_LABELS = {
-  OWNER: "Owner",
-  ADMIN: "Admin",
-  PHOTOGRAPHER: "Photographer",
-  VIEWER: "Viewer",
+  [USER_ROLES.USER]: "User",
+  [USER_ROLES.ADMIN]: "Admin",
 };
 
 export const PLAN_LABELS = {
@@ -34,20 +30,46 @@ export const PLAN_LABELS = {
   ENTERPRISE: "Enterprise",
 };
 
+function normalizeRoleValue(userOrRole) {
+  const value = typeof userOrRole === "string" ? userOrRole : userOrRole?.role;
+
+  return typeof value === "string" ? value : "";
+}
+
+export function getUserRoles(userOrRole) {
+  return normalizeRoleValue(userOrRole)
+    .split(",")
+    .map((role) => role.trim())
+    .filter(Boolean);
+}
+
+export function hasRole(userOrRole, role) {
+  return getUserRoles(userOrRole).includes(role);
+}
+
+export function isAdmin(userOrRole) {
+  return hasRole(userOrRole, USER_ROLES.ADMIN);
+}
+
 export function canManageGalleries(user) {
-  return [USER_ROLES.OWNER, USER_ROLES.ADMIN, USER_ROLES.PHOTOGRAPHER].includes(
-    user?.role,
-  );
+  if (!user?.id) {
+    return false;
+  }
+
+  return hasRole(user, USER_ROLES.USER) || hasRole(user, USER_ROLES.ADMIN);
 }
 
 export function hasActiveSubscription(user) {
-  return [SUBSCRIPTION_STATUSES.TRIALING, SUBSCRIPTION_STATUSES.ACTIVE].includes(
-    user?.subscriptionStatus,
-  );
+  return [
+    SUBSCRIPTION_STATUSES.TRIALING,
+    SUBSCRIPTION_STATUSES.ACTIVE,
+  ].includes(user?.subscriptionStatus);
 }
 
-export function getRoleLabel(role) {
-  return ROLE_LABELS[role] || ROLE_LABELS.OWNER;
+export function getRoleLabel(userOrRole) {
+  return isAdmin(userOrRole)
+    ? ROLE_LABELS[USER_ROLES.ADMIN]
+    : ROLE_LABELS[USER_ROLES.USER];
 }
 
 export function getPlanLabel(plan) {

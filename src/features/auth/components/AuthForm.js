@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth/client";
@@ -14,7 +14,6 @@ import { Eye } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SignInSchema, SignUpSchema } from "@/lib/zod/schema";
-import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 
 const AUTH_ERROR_MESSAGES = {
