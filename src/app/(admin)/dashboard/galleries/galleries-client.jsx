@@ -27,11 +27,11 @@ import { useState } from "react";
 const DEFAULT_GALLERY_COVER = "/images/cover.jpg";
 
 function getGalleryCoverUrl(gallery) {
-  if (!gallery.coverImage?.id) {
+  if (!gallery.coverImageId) {
     return DEFAULT_GALLERY_COVER;
   }
 
-  return `/api/images/${gallery.coverImage.id}/asset?variant=thumbnail`;
+  return `/api/images/${gallery.coverImageId}/asset?variant=thumbnail`;
 }
 
 export default function GalleriesClient({ galleries }) {
@@ -156,7 +156,7 @@ export default function GalleriesClient({ galleries }) {
                     <span className="text-xs text-muted-foreground truncate">
                       /{gallery.slug}
                     </span>
-                    {gallery.passwordHash && (
+                    {gallery.hasPassword && (
                       <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
                     )}
                     {gallery.downloadEnabled && (
@@ -171,10 +171,10 @@ export default function GalleriesClient({ galleries }) {
 
                 <div className="w-24 shrink-0 text-right">
                   <span className="text-sm text-foreground">
-                    {gallery._count.images}
+                    {gallery.counts.images}
                   </span>
                   <p className="text-[10px] text-muted-foreground">
-                    photos / {gallery._count.sets} sets
+                    photos / {gallery.counts.sets} sets
                   </p>
                 </div>
 

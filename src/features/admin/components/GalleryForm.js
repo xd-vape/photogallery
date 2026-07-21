@@ -56,7 +56,7 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
     formatInputDate(gallery?.expiresAt),
   );
   const [passwordProtected, setPasswordProtected] = useState(
-    Boolean(gallery?.passwordHash),
+    Boolean(gallery?.hasPassword),
   );
   const [downloadEnabled, setDownloadEnabled] = useState(
     Boolean(gallery?.downloadEnabled),
@@ -201,14 +201,14 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
                 maxLength={120}
                 autoComplete="new-password"
                 placeholder={
-                  gallery?.passwordHash
+                  gallery?.hasPassword
                     ? "Leave blank to keep the current password"
                     : "Enter gallery password"
                 }
                 className="input-field"
               />
 
-              {gallery?.passwordHash ? (
+              {gallery?.hasPassword ? (
                 <p className="text-xs text-muted-foreground">
                   Leave this field empty to keep the existing password.
                 </p>
@@ -216,7 +216,7 @@ export function GalleryForm({ gallery, action, submitLabel, formId }) {
             </div>
           ) : null}
 
-          {!passwordProtected && gallery?.passwordHash ? (
+          {!passwordProtected && gallery?.hasPassword ? (
             <input type="hidden" name="clearPassword" value="on" />
           ) : null}
 

@@ -25,12 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { getPlanLabel, getRoleLabel, isAdmin } from "@/lib/auth/permissions";
+
 import { Users } from "lucide-react";
 import { BookUser } from "lucide-react";
 import { BarChart2 } from "lucide-react";
 import { ServerCog } from "lucide-react";
 import { Separator } from "../ui/separator";
+import { Badge } from "../ui/badge";
 
 const NAV = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -54,7 +55,7 @@ export default function DashboardSidebar({ user }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const accessAdmin = isAdmin(user);
+  const accessAdmin = user.isAdmin;
 
   const userInitials = user
     ? user.name
@@ -142,13 +143,10 @@ export default function DashboardSidebar({ user }) {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
-                {user?.name}
+                <Badge variant="outline">{user.roleLabel}</Badge> {user?.name}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {getRoleLabel(user?.role)}
-              </p>
-              <p className="text-[11px] text-muted-foreground truncate">
-                {getPlanLabel(user?.subscriptionPlan)} Plan
+                {user.planLabel} Plan
               </p>
             </div>
             <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
@@ -169,8 +167,7 @@ export default function DashboardSidebar({ user }) {
                   {user?.email}
                 </p>
                 <p className="text-[11px] text-muted-foreground truncate">
-                  {getRoleLabel(user?.role)} ·{" "}
-                  {getPlanLabel(user?.subscriptionPlan)}
+                  {user.roleLabel} · {user.planLabel}
                 </p>
               </div>
             </div>

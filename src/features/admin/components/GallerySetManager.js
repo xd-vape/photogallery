@@ -182,7 +182,7 @@ export function GallerySetManager({
                   {gallerySet.name}
                 </span>
                 <span className="text-xs tabular-nums">
-                  {gallerySet._count.images}
+                  {gallerySet.imageCount}
                 </span>
               </button>
               <DropdownMenu>
