@@ -1,4 +1,8 @@
+import "server-only";
+
 import { prisma } from "@/lib/db/prisma";
+
+const MAX_SLUG_LENGTH = 72;
 
 export function slugify(value) {
   return String(value)
@@ -8,29 +12,37 @@ export function slugify(value) {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 72);
+    .slice(0, MAX_SLUG_LENGTH);
 }
 
-export async function uniqueGallerySlug(ownerId, title, currentGalleryId = null) {
+function appendSlugSuffix(base, suffix) {
+  const suffixText = `-${suffix}`;
+  const availableBaseLength = MAX_SLUG_LENGTH - suffixText.length;
+
+  return `${base.slice(0, availableBaseLength)}${suffixText}`;
+}
+
+export async function uniqueGallerySlug(title, currentGalleryId = null) {
   const base = slugify(title) || "gallery";
+
   let candidate = base;
   let suffix = 2;
 
   while (true) {
-    const existing = await prisma.gallery.findFirst({
+    const existing = await prisma.gallery.findUnique({
       where: {
-        ownerId,
         slug: candidate,
-        ...(currentGalleryId ? { id: { not: currentGalleryId } } : {}),
       },
-      select: { id: true },
+      select: {
+        id: true,
+      },
     });
 
-    if (!existing) {
+    if (!existing || existing.id === currentGalleryId) {
       return candidate;
     }
 
-    candidate = `${base}-${suffix}`;
+    candidate = appendSlugSuffix(base, suffix);
     suffix += 1;
   }
 }

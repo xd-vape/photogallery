@@ -1,5 +1,4 @@
 import "server-only";
-import { email } from "zod";
 import { getPlanLabel, getRoleLabel, isAdmin } from "../auth/permissions";
 
 export function toSidebarUserDto(user) {

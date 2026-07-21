@@ -31,16 +31,13 @@ function galleryDataFromParsed(parsed, slug, passwordHash) {
 export async function createGalleryAction(formData) {
   const user = await requireUser();
   const parsed = parseGalleryForm(formData);
-  const slug = await uniqueGallerySlug(user.id, parsed.title);
   const passwordHash = await hashGalleryPassword(parsed.password);
 
-  const gallery = await prisma.gallery.create({
-    data: {
-      ownerId: user.id,
-      ...galleryDataFromParsed(parsed, slug, passwordHash),
-    },
-    select: { id: true },
-  });
+  const gallery = await createGalleryWithUniqueSlug(
+    user.id,
+    parsed,
+    passwordHash,
+  );
 
   revalidatePath("/dashboard");
   redirect(`/dashboard/galleries/${gallery.id}`);
@@ -49,11 +46,7 @@ export async function createGalleryAction(formData) {
 export async function updateGalleryAction(galleryId, formData) {
   const { gallery } = await requireOwnedGallery(galleryId);
   const parsed = parseGalleryForm(formData);
-  const slug = await uniqueGallerySlug(
-    gallery.ownerId,
-    parsed.title,
-    gallery.id,
-  );
+  const slug = await uniqueGallerySlug(parsed.title, gallery.id);
   let passwordHash = gallery.passwordHash;
 
   if (parsed.clearPassword) {
@@ -124,4 +117,42 @@ export async function deleteGalleryAction(galleryId) {
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
+}
+
+function isSlugConflict(error) {
+  if (error?.code !== "P2002") {
+    return false;
+  }
+
+  const target = error?.meta?.target;
+
+  return Array.isArray(target)
+    ? target.includes("slug")
+    : String(target || "").includes("slug");
+}
+
+async function createGalleryWithUniqueSlug(ownerId, parsed, passwordHash) {
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const slug = await uniqueGallerySlug(parsed.title);
+
+    try {
+      return await prisma.gallery.create({
+        data: {
+          ownerId,
+          ...galleryDataFromParsed(parsed, slug, passwordHash),
+        },
+        select: {
+          id: true,
+        },
+      });
+    } catch (error) {
+      if (!isSlugConflict(error) || attempt === maxAttempts) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error("Could not allocate a unique gallery slug.");
 }

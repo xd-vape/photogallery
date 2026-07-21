@@ -60,8 +60,10 @@ export function isPublishedGalleryAvailable(gallery) {
 }
 
 export async function getPublicGallery(slug, include = {}) {
-  const gallery = await prisma.gallery.findFirst({
-    where: { slug },
+  const gallery = await prisma.gallery.findUnique({
+    where: {
+      slug,
+    },
     include,
   });
 
