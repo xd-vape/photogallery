@@ -22,7 +22,7 @@ function appendSlugSuffix(base, suffix) {
   return `${base.slice(0, availableBaseLength)}${suffixText}`;
 }
 
-export async function uniqueGallerySlug(title, currentGalleryId = null) {
+export async function uniqueGallerySlug(title) {
   const base = slugify(title) || "gallery";
 
   let candidate = base;
@@ -38,7 +38,7 @@ export async function uniqueGallerySlug(title, currentGalleryId = null) {
       },
     });
 
-    if (!existing || existing.id === currentGalleryId) {
+    if (!existing) {
       return candidate;
     }
 

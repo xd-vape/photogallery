@@ -13,12 +13,10 @@ import {
   parseOptionalDate,
 } from "@/lib/galleries/validation";
 import { getStorage } from "@/lib/storage";
-import { toast } from "sonner";
 
-function galleryDataFromParsed(parsed, slug, passwordHash) {
+function galleryDataFromParsed(parsed, passwordHash) {
   return {
     title: parsed.title,
-    slug,
     description: parsed.description || null,
     status: parsed.status,
     passwordHash,
@@ -46,7 +44,7 @@ export async function createGalleryAction(formData) {
 export async function updateGalleryAction(galleryId, formData) {
   const { gallery } = await requireOwnedGallery(galleryId);
   const parsed = parseGalleryForm(formData);
-  const slug = await uniqueGallerySlug(parsed.title, gallery.id);
+
   let passwordHash = gallery.passwordHash;
 
   if (parsed.clearPassword) {
@@ -56,13 +54,17 @@ export async function updateGalleryAction(galleryId, formData) {
   }
 
   await prisma.gallery.update({
-    where: { id: gallery.id },
-    data: galleryDataFromParsed(parsed, slug, passwordHash),
+    where: {
+      id: gallery.id,
+    },
+    data: galleryDataFromParsed(parsed, passwordHash),
   });
 
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/galleries");
   revalidatePath(`/dashboard/galleries/${gallery.id}`);
-  revalidatePath(`/g/${slug}`);
+  revalidatePath(`/preview/galleries/${gallery.id}`);
+  revalidatePath(`/g/${gallery.slug}`);
 }
 
 export async function updateGalleryAppearanceAction(galleryId, values) {
@@ -141,7 +143,8 @@ async function createGalleryWithUniqueSlug(ownerId, parsed, passwordHash) {
       return await prisma.gallery.create({
         data: {
           ownerId,
-          ...galleryDataFromParsed(parsed, slug, passwordHash),
+          slug,
+          ...galleryDataFromParsed(parsed, passwordHash),
         },
         select: {
           id: true,
