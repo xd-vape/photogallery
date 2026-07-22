@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { requireUser } from "@/lib/auth/session";
+import { isGalleryExpired } from "./status";
 
 function secret() {
   return process.env.BETTER_AUTH_SECRET || "development-gallery-access-secret";
@@ -51,12 +52,12 @@ export async function requireOwnedGallery(galleryId, include = {}) {
   return { user, gallery };
 }
 
-export function isPublishedGalleryAvailable(gallery) {
-  if (!gallery || gallery.status !== "PUBLISHED") {
-    return false;
-  }
-
-  return !gallery.expiresAt || gallery.expiresAt > new Date();
+export function isPublishedGalleryAvailable(gallery, now = new Date()) {
+  return Boolean(
+    gallery &&
+    gallery.status === "PUBLISHED" &&
+    !isGalleryExpired(gallery, now),
+  );
 }
 
 export async function getPublicGallery(slug, include = {}) {

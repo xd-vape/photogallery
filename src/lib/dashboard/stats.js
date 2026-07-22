@@ -1,44 +1,71 @@
+import "server-only";
 import { prisma } from "../db/prisma";
+import {
+  activePublishedGalleryWhere,
+  expiredPublishedGalleryWhere,
+  nonArchivedGalleryWhere,
+} from "../galleries/status";
 
-export async function getDashboardStats(userId) {
+export async function getDashboardStats(userId, now = new Date()) {
+  const ownedNonArchivedWhere = {
+    ownerId: userId,
+    ...nonArchivedGalleryWhere(),
+  };
+
+  const ownedActivePublishedWhere = {
+    ownerId: userId,
+    ...activePublishedGalleryWhere(now),
+  };
+
+  const ownedExpiredPublishedWhere = {
+    ownerId: userId,
+    ...expiredPublishedGalleryWhere(now),
+  };
+
   const [
-    totalGalleries,
-    publishedGalleries,
+    currentGalleries,
+    activePublishedGalleries,
+    expiredGalleries,
     totalPhotos,
     clientSelections,
     downloadsEnabled,
   ] = await Promise.all([
     prisma.gallery.count({
-      where: { ownerId: userId },
+      where: ownedNonArchivedWhere,
     }),
 
     prisma.gallery.count({
-      where: { ownerId: userId, status: "PUBLISHED" },
+      where: ownedActivePublishedWhere,
+    }),
+
+    prisma.gallery.count({
+      where: ownedExpiredPublishedWhere,
     }),
 
     prisma.image.count({
-      where: { gallery: { ownerId: userId } },
+      where: {
+        gallery: ownedNonArchivedWhere,
+      },
     }),
 
-    // prisma.submission.count({
-    //   where: {
-    //     gallery: {
-    //       ownerId: userId,
-    //     },
-    //   },
-    // }),
+    prisma.favoriteSubmission.count({
+      where: {
+        gallery: ownedNonArchivedWhere,
+      },
+    }),
 
     prisma.gallery.count({
       where: {
-        ownerId: userId,
+        ...ownedActivePublishedWhere,
         downloadEnabled: true,
       },
     }),
   ]);
 
   return {
-    totalGalleries,
-    publishedGalleries,
+    currentGalleries,
+    activePublishedGalleries,
+    expiredGalleries,
     totalPhotos,
     clientSelections,
     downloadsEnabled,

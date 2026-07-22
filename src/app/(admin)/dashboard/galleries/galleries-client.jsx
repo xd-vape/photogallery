@@ -39,29 +39,40 @@ export default function GalleriesClient({ galleries }) {
   const [filter, setFilter] = useState("all");
 
   const filtered =
-    filter === "all" ? galleries : galleries.filter((g) => g.status === filter);
+    filter === "all"
+      ? galleries
+      : galleries.filter((g) => g.displayStatus === filter);
 
   const tabs = [
-    { label: "All", value: "all", count: galleries.length },
+    {
+      label: "All",
+      value: "all",
+      count: galleries.length,
+    },
     {
       label: "Published",
       value: "PUBLISHED",
-      count: galleries.filter((g) => g.status === "PUBLISHED").length,
+      count: galleries.filter(
+        (gallery) => gallery.displayStatus === "PUBLISHED",
+      ).length,
     },
     {
       label: "Draft",
       value: "DRAFT",
-      count: galleries.filter((g) => g.status === "DRAFT").length,
+      count: galleries.filter((gallery) => gallery.displayStatus === "DRAFT")
+        .length,
     },
     {
       label: "Archived",
       value: "ARCHIVED",
-      count: galleries.filter((g) => g.status === "ARCHIVED").length,
+      count: galleries.filter((gallery) => gallery.displayStatus === "ARCHIVED")
+        .length,
     },
     {
       label: "Expired",
       value: "EXPIRED",
-      count: galleries.filter((g) => g.status === "EXPIRED").length,
+      count: galleries.filter((gallery) => gallery.displayStatus === "EXPIRED")
+        .length,
     },
   ];
 
@@ -166,7 +177,7 @@ export default function GalleriesClient({ galleries }) {
                 </div>
 
                 <div className="shrink-0">
-                  <StatusBadge status={gallery.status} />
+                  <StatusBadge status={gallery.displayStatus} />
                 </div>
 
                 <div className="w-24 shrink-0 text-right">

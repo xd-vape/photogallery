@@ -5,6 +5,7 @@ import { toGalleryListItemDto } from "@/lib/dto/gallery";
 
 export default async function GalleriesPage() {
   const user = await requireUser();
+  const now = new Date();
 
   const galleries = await prisma.gallery.findMany({
     where: {
@@ -18,6 +19,7 @@ export default async function GalleriesPage() {
       title: true,
       slug: true,
       status: true,
+      expiresAt: true,
       eventDate: true,
       passwordHash: true,
       downloadEnabled: true,
@@ -32,5 +34,9 @@ export default async function GalleriesPage() {
     },
   });
 
-  return <GalleriesClient galleries={galleries.map(toGalleryListItemDto)} />;
+  return (
+    <GalleriesClient
+      galleries={galleries.map((gallery) => toGalleryListItemDto(gallery, now))}
+    />
+  );
 }

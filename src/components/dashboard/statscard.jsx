@@ -1,33 +1,35 @@
-import { TrendingUp } from "lucide-react";
-import { Download } from "lucide-react";
-import { Heart } from "lucide-react";
-import { Images } from "lucide-react";
-import React from "react";
+import { Download, Heart, Images, TrendingUp } from "lucide-react";
+
+function formatCount(value) {
+  return Number(value ?? 0).toLocaleString("de-DE");
+}
 
 export default function StatsCard({ stats }) {
   const items = [
     {
-      label: "Total Galleries",
-      value: stats.totalGalleries,
-      sub: `${stats.publishedGalleries} published`,
+      label: "Current Galleries",
+      value: formatCount(stats.currentGalleries),
+      sub: `${formatCount(
+        stats.activePublishedGalleries,
+      )} published · ${formatCount(stats.expiredGalleries)} expired`,
       icon: Images,
     },
     {
       label: "Total Photos",
-      value: stats.totalPhotos.toLocaleString("de-DE"),
-      sub: "across all galleries",
+      value: formatCount(stats.totalPhotos),
+      sub: "in non-archived galleries",
       icon: TrendingUp,
     },
     {
       label: "Client Selections",
-      value: stats.clientSelections,
+      value: formatCount(stats.clientSelections),
       sub: "client submissions",
       icon: Heart,
     },
     {
       label: "Downloads Enabled",
-      value: stats.downloadsEnabled,
-      sub: "galleries with download",
+      value: formatCount(stats.downloadsEnabled),
+      sub: "active published galleries",
       icon: Download,
     },
   ];
@@ -40,16 +42,19 @@ export default function StatsCard({ stats }) {
           className="rounded-xl border border-border bg-card p-5"
         >
           <div className="flex items-start justify-between">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {label}
             </p>
+
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
               <Icon className="h-4 w-4 text-muted-foreground" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-semibold text-foreground font-sans">
+
+          <p className="mt-3 font-sans text-2xl font-semibold text-foreground">
             {value}
           </p>
+
           <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
         </div>
       ))}

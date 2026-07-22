@@ -18,52 +18,53 @@ import StatsCard from "@/components/dashboard/statscard";
 import { getDashboardStats } from "@/lib/dashboard/stats";
 import Image from "next/image";
 import StatusBadge from "@/components/dashboard/status-badge";
+import {
+  getGalleryDisplayStatus,
+  nonArchivedGalleryWhere,
+} from "@/lib/galleries/status";
 
 const DEFAULT_GALLERY_COVER = "/images/cover.jpg";
 
 function getGalleryCoverUrl(gallery) {
-  if (!gallery.coverImage?.id) {
+  if (!gallery.coverImageId) {
     return DEFAULT_GALLERY_COVER;
   }
 
-  return `/api/images/${gallery.coverImage.id}/asset?variant=thumbnail`;
+  return `/api/images/${gallery.coverImageId}/asset?variant=thumbnail`;
 }
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const stats = await getDashboardStats(user.id);
+  const now = new Date();
 
-  // Altes laden der ganzen Gallieren vom User
-  // const galleries = await prisma.gallery.findMany({
-  //   where: { ownerId: user.id },
-  //   orderBy: { updatedAt: "desc" },
-  //   include: { _count: { select: { images: true, submissions: true } } },
-  // });
+  const [stats, recentGalleries] = await Promise.all([
+    getDashboardStats(user.id, now),
 
-  const recentGalleries = await prisma.gallery.findMany({
-    where: {
-      ownerId: user.id,
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-    take: 5,
-    include: {
-      coverImage: {
-        select: {
-          id: true,
-          thumbnailKey: true,
+    prisma.gallery.findMany({
+      where: {
+        ownerId: user.id,
+        ...nonArchivedGalleryWhere(),
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        expiresAt: true,
+        createdAt: true,
+        coverImageId: true,
+        _count: {
+          select: {
+            images: true,
+            sets: true,
+          },
         },
       },
-      _count: {
-        select: {
-          images: true,
-          sets: true,
-          submissions: true,
-        },
-      },
-    },
-  });
+    }),
+  ]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -126,7 +127,7 @@ export default async function DashboardPage() {
                       {gallery.createdAt.toLocaleDateString("de-DE")}
                     </p>
                   </div>
-                  <StatusBadge status={gallery.status} />
+                  <StatusBadge status={getGalleryDisplayStatus(gallery, now)} />
                 </Link>
               ))}
             </div>

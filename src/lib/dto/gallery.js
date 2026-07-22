@@ -1,4 +1,5 @@
 import "server-only";
+import { getGalleryDisplayStatus } from "../galleries/status";
 
 function toIsoString(value) {
   if (!value) return null;
@@ -44,12 +45,12 @@ function toFavoriteSubmissionDto(submission) {
   };
 }
 
-export function toGalleryListItemDto(gallery) {
+export function toGalleryListItemDto(gallery, now = new Date()) {
   return {
     id: gallery.id,
     title: gallery.title,
     slug: gallery.slug,
-    status: gallery.status,
+    displayStatus: getGalleryDisplayStatus(gallery, now),
     eventDate: toIsoString(gallery.eventDate),
     hasPassword: Boolean(gallery.passwordHash),
     downloadEnabled: gallery.downloadEnabled,
