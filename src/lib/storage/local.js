@@ -1,8 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getServerEnv } from "../config/server-env";
 
 function storageRoot() {
-  const configuredPath = process.env.LOCAL_STORAGE_DIR || "storage";
+  const configuredPath = getServerEnv().LOCAL_STORAGE_DIR;
 
   if (path.isAbsolute(configuredPath)) {
     return configuredPath;

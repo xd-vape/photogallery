@@ -1,11 +1,11 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
+import { getServerEnv } from "../config/server-env";
 
 const globalForPrisma = globalThis;
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres:postgres@localhost:5432/photogallery?schema=public";
-const adapter = new PrismaPg(connectionString);
+const environment = getServerEnv();
+
+const adapter = new PrismaPg(environment.DATABASE_URL);
 
 export const prisma =
   globalForPrisma.prisma ||

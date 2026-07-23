@@ -4,10 +4,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { requireUser } from "@/lib/auth/session";
 import { isGalleryExpired } from "./status";
+import { getServerEnv } from "../config/server-env";
 
-function secret() {
-  return process.env.BETTER_AUTH_SECRET || "development-gallery-access-secret";
-}
+const environment = getServerEnv();
 
 export function galleryAccessCookieName(slug) {
   return `gallery_access_${slug.replace(/[^a-z0-9-]/g, "")}`;
@@ -15,7 +14,10 @@ export function galleryAccessCookieName(slug) {
 
 export function createGalleryAccessToken(gallery) {
   const payload = `${gallery.id}:${gallery.passwordHash}`;
-  return crypto.createHmac("sha256", secret()).update(payload).digest("hex");
+  return crypto
+    .createHmac("sha256", environment.GALLERY_ACCESS_SECRET)
+    .update(payload)
+    .digest("hex");
 }
 
 export function verifyGalleryAccessToken(gallery, token) {

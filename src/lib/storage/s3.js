@@ -4,25 +4,22 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-
-function requiredEnv(name) {
-  const value = process.env[name];
-
-  if (!value) {
-    throw new Error(`${name} is required for S3 storage.`);
-  }
-
-  return value;
-}
+import { getServerEnv } from "../config/server-env";
 
 function client() {
+  const environment = getServerEnv();
+
   return new S3Client({
-    endpoint: process.env.S3_ENDPOINT || undefined,
-    region: process.env.S3_REGION || "auto",
-    forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== "false",
+    endpoint: environment.S3_ENDPOINT || undefined,
+
+    region: environment.S3_REGION,
+
+    forcePathStyle: environment.S3_FORCE_PATH_STYLE !== "false",
+
     credentials: {
-      accessKeyId: requiredEnv("S3_ACCESS_KEY_ID"),
-      secretAccessKey: requiredEnv("S3_SECRET_ACCESS_KEY"),
+      accessKeyId: environment.S3_ACCESS_KEY_ID,
+
+      secretAccessKey: environment.S3_SECRET_ACCESS_KEY,
     },
   });
 }
@@ -43,32 +40,38 @@ async function streamToBuffer(body) {
 
 export const s3StorageAdapter = {
   async put(key, buffer) {
+    const environment = getServerEnv();
+
     await client().send(
       new PutObjectCommand({
-        Bucket: requiredEnv("S3_BUCKET"),
+        Bucket: environment.S3_BUCKET,
         Key: key,
         Body: buffer,
-      })
+      }),
     );
   },
 
   async get(key) {
+    const environment = getServerEnv();
+
     const response = await client().send(
       new GetObjectCommand({
-        Bucket: requiredEnv("S3_BUCKET"),
+        Bucket: environment.S3_BUCKET,
         Key: key,
-      })
+      }),
     );
 
     return streamToBuffer(response.Body);
   },
 
   async remove(key) {
+    const environment = getServerEnv();
+
     await client().send(
       new DeleteObjectCommand({
-        Bucket: requiredEnv("S3_BUCKET"),
+        Bucket: environment.S3_BUCKET,
         Key: key,
-      })
+      }),
     );
   },
 };

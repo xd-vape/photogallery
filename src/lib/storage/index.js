@@ -1,10 +1,20 @@
 import { localStorageAdapter } from "@/lib/storage/local";
 import { s3StorageAdapter } from "@/lib/storage/s3";
+import { getServerEnv } from "../config/server-env";
 
 export function getStorage() {
-  if (process.env.STORAGE_DRIVER === "s3") {
-    return s3StorageAdapter;
-  }
+  const environment = getServerEnv();
 
-  return localStorageAdapter;
+  switch (environment.STORAGE_DRIVER) {
+    case "local":
+      return localStorageAdapter;
+
+    case "s3":
+      return s3StorageAdapter;
+
+    default:
+      throw new Error(
+        `Unsupported storage driver: ${environment.STORAGE_DRIVER}`,
+      );
+  }
 }
